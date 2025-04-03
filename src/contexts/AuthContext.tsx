@@ -21,13 +21,19 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Mock user data - in a real app, this would come from a backend
-const mockUsers = [
+const mockUsers: Array<{
+  id: string;
+  email: string;
+  password: string;
+  name: string;
+  role: "admin" | "sales" | "manager";
+}> = [
   {
     id: "1",
     email: "admin@example.com",
     password: "password123",
     name: "Admin User",
-    role: "admin" as const,
+    role: "admin",
   },
 ];
 
