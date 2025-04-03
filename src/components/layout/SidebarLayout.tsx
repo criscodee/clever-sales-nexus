@@ -1,19 +1,15 @@
-
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import {
   BarChart3,
-  Users,
-  Package,
   ShoppingCart,
   LayoutDashboard,
   LogOut,
   Menu,
   X,
   ChevronDown,
-  User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -45,26 +41,6 @@ const SidebarLayout = ({ children }: SidebarLayoutProps) => {
       name: "Sales",
       path: "/sales",
       icon: <ShoppingCart size={20} />,
-    },
-    {
-      name: "Customers",
-      path: "/customers",
-      icon: <Users size={20} />,
-    },
-    {
-      name: "Products",
-      path: "/products",
-      icon: <Package size={20} />,
-    },
-    {
-      name: "Employees",
-      path: "/employees",
-      icon: <User size={20} />,
-    },
-    {
-      name: "Reports",
-      path: "/reports",
-      icon: <BarChart3 size={20} />,
     },
   ];
 

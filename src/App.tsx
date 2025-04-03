@@ -14,10 +14,7 @@ import Signup from "@/pages/Signup";
 // Main Pages
 import Dashboard from "@/pages/Dashboard";
 import Sales from "@/pages/Sales";
-import Customers from "@/pages/Customers";
-import Products from "@/pages/Products";
-import Employees from "@/pages/Employees";
-import Reports from "@/pages/Reports";
+import SaleDetails from "@/pages/SaleDetails";
 
 // Other Pages
 import NotFound from "@/pages/NotFound";
@@ -61,41 +58,11 @@ const App = () => (
               }
             />
             <Route
-              path="/customers"
+              path="/sales/:id"
               element={
                 <ProtectedRoute>
                   <SidebarLayout>
-                    <Customers />
-                  </SidebarLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/products"
-              element={
-                <ProtectedRoute>
-                  <SidebarLayout>
-                    <Products />
-                  </SidebarLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/employees"
-              element={
-                <ProtectedRoute>
-                  <SidebarLayout>
-                    <Employees />
-                  </SidebarLayout>
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/reports"
-              element={
-                <ProtectedRoute>
-                  <SidebarLayout>
-                    <Reports />
+                    <SaleDetails />
                   </SidebarLayout>
                 </ProtectedRoute>
               }

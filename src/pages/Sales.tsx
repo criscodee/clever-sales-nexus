@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -10,14 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, PlusCircle } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Search, PlusCircle, Eye } from "lucide-react";
 
 // Mock data for sales
 const salesData = [
@@ -27,7 +21,6 @@ const salesData = [
     customer: "Acme Corp",
     employee: "John Smith",
     amount: 1200.50,
-    status: "Completed",
   },
   {
     id: "S002",
@@ -35,7 +28,6 @@ const salesData = [
     customer: "Globex Inc",
     employee: "Jane Doe",
     amount: 850.75,
-    status: "Completed",
   },
   {
     id: "S003",
@@ -43,7 +35,6 @@ const salesData = [
     customer: "Stark Industries",
     employee: "Michael Johnson",
     amount: 3200.00,
-    status: "Pending",
   },
   {
     id: "S004",
@@ -51,7 +42,6 @@ const salesData = [
     customer: "Wayne Enterprises",
     employee: "Sarah Williams",
     amount: 1750.25,
-    status: "Completed",
   },
   {
     id: "S005",
@@ -59,7 +49,6 @@ const salesData = [
     customer: "LexCorp",
     employee: "David Brown",
     amount: 950.00,
-    status: "Cancelled",
   },
   {
     id: "S006",
@@ -67,7 +56,6 @@ const salesData = [
     customer: "Umbrella Corp",
     employee: "Emily Davis",
     amount: 2100.50,
-    status: "Pending",
   },
   {
     id: "S007",
@@ -75,7 +63,6 @@ const salesData = [
     customer: "Cyberdyne Systems",
     employee: "Robert Wilson",
     amount: 1500.00,
-    status: "Completed",
   },
   {
     id: "S008",
@@ -83,26 +70,25 @@ const salesData = [
     customer: "Oscorp",
     employee: "Jennifer Lee",
     amount: 3750.25,
-    status: "Pending",
   },
 ];
 
 const Sales = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const navigate = useNavigate();
 
   const filteredSales = salesData.filter((sale) => {
-    const matchesSearch =
+    return (
       searchTerm === "" ||
       sale.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
       sale.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      sale.employee.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesStatus =
-      statusFilter === "all" || sale.status === statusFilter;
-
-    return matchesSearch && matchesStatus;
+      sale.employee.toLowerCase().includes(searchTerm.toLowerCase())
+    );
   });
+
+  const handleViewDetails = (id: string) => {
+    navigate(`/sales/${id}`);
+  };
 
   return (
     <div className="space-y-6">
@@ -124,20 +110,6 @@ const Sales = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-
-        <div className="flex flex-col space-y-2 md:flex-row md:space-y-0 md:space-x-2">
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full md:w-36">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="Completed">Completed</SelectItem>
-              <SelectItem value="Pending">Pending</SelectItem>
-              <SelectItem value="Cancelled">Cancelled</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
       </div>
 
       <div className="border rounded-md">
@@ -149,7 +121,7 @@ const Sales = () => {
               <TableHead>Customer</TableHead>
               <TableHead>Employee</TableHead>
               <TableHead className="text-right">Amount</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -170,17 +142,15 @@ const Sales = () => {
                     ${sale.amount.toFixed(2)}
                   </TableCell>
                   <TableCell>
-                    <div
-                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                        sale.status === "Completed"
-                          ? "bg-green-100 text-green-800"
-                          : sale.status === "Pending"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleViewDetails(sale.id)}
+                      className="flex items-center gap-1"
                     >
-                      {sale.status}
-                    </div>
+                      <Eye className="h-4 w-4" />
+                      <span>Details</span>
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))
