@@ -91,7 +91,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email,
         password,
         name,
-        role: "sales" as const,
+        role: "sales" as const, // This ensures it matches the expected type
       };
       
       mockUsers.push(newUser);

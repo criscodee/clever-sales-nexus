@@ -89,7 +89,7 @@ const salesData = [
 
 const Sales = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   const filteredSales = salesData.filter((sale) => {
     const matchesSearch =
@@ -99,7 +99,7 @@ const Sales = () => {
       sale.employee.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus =
-      statusFilter === "" || sale.status === statusFilter;
+      statusFilter === "all" || sale.status === statusFilter;
 
     return matchesSearch && matchesStatus;
   });
@@ -131,7 +131,7 @@ const Sales = () => {
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Statuses</SelectItem>
+              <SelectItem value="all">All Statuses</SelectItem>
               <SelectItem value="Completed">Completed</SelectItem>
               <SelectItem value="Pending">Pending</SelectItem>
               <SelectItem value="Cancelled">Cancelled</SelectItem>
