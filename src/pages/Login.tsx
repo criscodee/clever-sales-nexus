@@ -36,7 +36,6 @@ const Login = () => {
     try {
       const success = await login(email, password);
       if (success) {
-        // Get the redirect path from location state or default to dashboard
         const from = location.state?.from?.pathname || "/dashboard";
         navigate(from);
       }

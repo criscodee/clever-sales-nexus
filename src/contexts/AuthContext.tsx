@@ -2,9 +2,9 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { User } from "@supabase/supabase-js";
 
-interface User {
+interface UserProfile {
   id: string;
   email: string;
   name: string;
@@ -12,7 +12,7 @@ interface User {
 }
 
 interface AuthContextType {
-  user: User | null;
+  user: UserProfile | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
@@ -23,7 +23,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -32,25 +32,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       async (event, session) => {
         if (session) {
           try {
-            // Get user profile from Supabase
-            const { data } = await supabase
-              .from('profiles')
-              .select('name, role')
-              .eq('id', session.user.id)
-              .single();
-
-            if (data) {
-              const userData: User = {
-                id: session.user.id,
-                email: session.user.email || '',
-                name: data.name || session.user.email?.split('@')[0] || 'User',
-                role: (data.role as "admin" | "sales" | "manager") || 'sales'
-              };
-              
-              setUser(userData);
-            }
+            // Manually create a user profile object without querying the profiles table
+            const userData: UserProfile = {
+              id: session.user.id,
+              email: session.user.email || '',
+              name: session.user.user_metadata.name || session.user.email?.split('@')[0] || 'User',
+              role: (session.user.user_metadata.role as "admin" | "sales" | "manager") || 'sales'
+            };
+            
+            setUser(userData);
           } catch (error) {
-            console.error("Error fetching user profile:", error);
+            console.error("Error setting user data:", error);
             setUser(null);
           }
         } else {
@@ -66,25 +58,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       if (session) {
         try {
-          // Get user profile from Supabase
-          const { data } = await supabase
-            .from('profiles')
-            .select('name, role')
-            .eq('id', session.user.id)
-            .single();
-
-          if (data) {
-            const userData: User = {
-              id: session.user.id,
-              email: session.user.email || '',
-              name: data.name || session.user.email?.split('@')[0] || 'User',
-              role: (data.role as "admin" | "sales" | "manager") || 'sales'
-            };
-            
-            setUser(userData);
-          }
+          // Manually create a user profile object without querying the profiles table
+          const userData: UserProfile = {
+            id: session.user.id,
+            email: session.user.email || '',
+            name: session.user.user_metadata.name || session.user.email?.split('@')[0] || 'User',
+            role: (session.user.user_metadata.role as "admin" | "sales" | "manager") || 'sales'
+          };
+          
+          setUser(userData);
         } catch (error) {
-          console.error("Error fetching user profile:", error);
+          console.error("Error setting user data:", error);
         }
       }
       
@@ -129,13 +113,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signup = async (name: string, email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     try {
-      // Sign up with Supabase
+      // Sign up with Supabase and include name in user metadata
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             name,
+            role: 'sales' // Default role
           }
         }
       });
@@ -146,7 +131,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       if (data.user) {
-        // The profile will be created automatically by the database trigger
         toast.success("Account created successfully");
         return true;
       }
