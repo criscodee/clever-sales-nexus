@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -17,9 +17,11 @@ const Signup = () => {
   const navigate = useNavigate();
 
   // Redirect if user is already authenticated
-  if (isAuthenticated) {
-    navigate("/dashboard");
-  }
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/dashboard");
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,8 +46,11 @@ const Signup = () => {
     try {
       const success = await signup(name, email, password);
       if (success) {
-        navigate("/dashboard");
+        toast.success("Account created successfully! Please login.");
+        navigate("/login");
       }
+    } catch (error: any) {
+      toast.error(error.message || "An error occurred during signup");
     } finally {
       setIsSubmitting(false);
     }

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -16,9 +16,12 @@ const Login = () => {
   const location = useLocation();
 
   // Redirect if user is already authenticated
-  if (isAuthenticated) {
-    navigate("/dashboard");
-  }
+  useEffect(() => {
+    if (isAuthenticated) {
+      const from = location.state?.from?.pathname || "/dashboard";
+      navigate(from);
+    }
+  }, [isAuthenticated, navigate, location.state]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,6 +40,8 @@ const Login = () => {
         const from = location.state?.from?.pathname || "/dashboard";
         navigate(from);
       }
+    } catch (error: any) {
+      toast.error(error.message || "An error occurred during login");
     } finally {
       setIsSubmitting(false);
     }
@@ -101,9 +106,6 @@ const Login = () => {
             </CardFooter>
           </form>
         </Card>
-        <div className="mt-4 text-center text-sm text-muted-foreground">
-          <div>Don't have an account? Register to get started.</div>
-        </div>
       </div>
     </div>
   );

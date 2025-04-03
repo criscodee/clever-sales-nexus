@@ -31,21 +31,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (session) {
-          // Get user profile from Supabase
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('name, role')
-            .eq('id', session.user.id)
-            .single();
+          try {
+            // Get user profile from Supabase
+            const { data } = await supabase
+              .from('profiles')
+              .select('name, role')
+              .eq('id', session.user.id)
+              .single();
 
-          const userData: User = {
-            id: session.user.id,
-            email: session.user.email || '',
-            name: profile?.name || session.user.email?.split('@')[0] || 'User',
-            role: (profile?.role as "admin" | "sales" | "manager") || 'sales'
-          };
-          
-          setUser(userData);
+            if (data) {
+              const userData: User = {
+                id: session.user.id,
+                email: session.user.email || '',
+                name: data.name || session.user.email?.split('@')[0] || 'User',
+                role: (data.role as "admin" | "sales" | "manager") || 'sales'
+              };
+              
+              setUser(userData);
+            }
+          } catch (error) {
+            console.error("Error fetching user profile:", error);
+            setUser(null);
+          }
         } else {
           setUser(null);
         }
@@ -58,21 +65,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session) {
-        // Get user profile from Supabase
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('name, role')
-          .eq('id', session.user.id)
-          .single();
+        try {
+          // Get user profile from Supabase
+          const { data } = await supabase
+            .from('profiles')
+            .select('name, role')
+            .eq('id', session.user.id)
+            .single();
 
-        const userData: User = {
-          id: session.user.id,
-          email: session.user.email || '',
-          name: profile?.name || session.user.email?.split('@')[0] || 'User',
-          role: (profile?.role as "admin" | "sales" | "manager") || 'sales'
-        };
-        
-        setUser(userData);
+          if (data) {
+            const userData: User = {
+              id: session.user.id,
+              email: session.user.email || '',
+              name: data.name || session.user.email?.split('@')[0] || 'User',
+              role: (data.role as "admin" | "sales" | "manager") || 'sales'
+            };
+            
+            setUser(userData);
+          }
+        } catch (error) {
+          console.error("Error fetching user profile:", error);
+        }
       }
       
       setIsLoading(false);
@@ -133,20 +146,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       if (data.user) {
-        // Create a profile for the user
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: data.user.id,
-            name,
-            role: 'sales'
-          });
-
-        if (profileError) {
-          toast.error("Failed to create user profile");
-          return false;
-        }
-
+        // The profile will be created automatically by the database trigger
         toast.success("Account created successfully");
         return true;
       }
