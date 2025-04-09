@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -13,14 +14,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { toast } from "sonner";
-import SaleForm, { SaleFormData } from "@/components/SaleForm";
+import { SaleFormData } from "@/components/SaleForm";
 
 // Mock data for sales details
 const getSaleById = (id: string) => {
@@ -92,6 +87,44 @@ const SaleDetails = () => {
       setLoading(false);
     }
   }, [id]);
+
+  const updateItemPrice = (index: number, price: number) => {
+    if (!sale) return;
+    
+    const updatedItems = [...sale.items];
+    updatedItems[index] = {
+      ...updatedItems[index],
+      price
+    };
+    
+    setSale({
+      ...sale,
+      items: updatedItems
+    });
+    
+    toast.success("Price updated");
+  };
+
+  const updateItemSubtotal = (index: number, subtotal: number) => {
+    if (!sale) return;
+    
+    const updatedItems = [...sale.items];
+    updatedItems[index] = {
+      ...updatedItems[index],
+      subtotal
+    };
+    
+    // Update total amount
+    const totalAmount = updatedItems.reduce((sum, item) => sum + item.subtotal, 0);
+    
+    setSale({
+      ...sale,
+      items: updatedItems,
+      amount: totalAmount
+    });
+    
+    toast.success("Subtotal updated");
+  };
 
   if (loading) {
     return <div className="flex justify-center items-center h-64">Loading...</div>;
@@ -165,12 +198,36 @@ const SaleDetails = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sale.items.map((item) => (
+                {sale.items.map((item, index) => (
                   <TableRow key={item.id}>
                     <TableCell>{item.product}</TableCell>
                     <TableCell className="text-right">{item.quantity}</TableCell>
-                    <TableCell className="text-right">${item.price.toFixed(2)}</TableCell>
-                    <TableCell className="text-right">${item.subtotal.toFixed(2)}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end">
+                        $
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={item.price}
+                          onChange={(e) => updateItemPrice(index, parseFloat(e.target.value) || 0)}
+                          className="w-20 text-right ml-1 h-8"
+                        />
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end">
+                        $
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={item.subtotal}
+                          onChange={(e) => updateItemSubtotal(index, parseFloat(e.target.value) || 0)}
+                          className="w-24 text-right ml-1 h-8"
+                        />
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
                 <TableRow>
