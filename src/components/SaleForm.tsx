@@ -47,7 +47,7 @@ const SaleForm = ({
 
   const form = useForm<SaleFormData>({
     defaultValues: initialData || {
-      id: "",
+      id: `S${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
       date: new Date().toISOString().split("T")[0],
       customer: "",
       employee: "",
@@ -82,6 +82,32 @@ const SaleForm = ({
     } else {
       toast.error("At least one item is required");
     }
+  };
+
+  const updateItemPrice = (index: number, price: number) => {
+    const newItems = [...items];
+    newItems[index].price = price;
+    
+    // Also update the subtotal based on quantity
+    newItems[index].subtotal = price * newItems[index].quantity;
+    
+    setItems(newItems);
+  };
+
+  const updateItemQuantity = (index: number, quantity: number) => {
+    const newItems = [...items];
+    newItems[index].quantity = quantity;
+    
+    // Also update the subtotal based on price
+    newItems[index].subtotal = quantity * newItems[index].price;
+    
+    setItems(newItems);
+  };
+
+  const updateItemSubtotal = (index: number, subtotal: number) => {
+    const newItems = [...items];
+    newItems[index].subtotal = subtotal;
+    setItems(newItems);
   };
 
   const handleSubmit = form.handleSubmit((data) => {
@@ -191,9 +217,7 @@ const SaleForm = ({
                       value={item.quantity}
                       onChange={(e) => {
                         const quantity = parseInt(e.target.value) || 0;
-                        const newItems = [...items];
-                        newItems[index].quantity = quantity;
-                        setItems(newItems);
+                        updateItemQuantity(index, quantity);
                       }}
                     />
                   </div>
@@ -207,9 +231,7 @@ const SaleForm = ({
                       value={item.price}
                       onChange={(e) => {
                         const price = parseFloat(e.target.value) || 0;
-                        const newItems = [...items];
-                        newItems[index].price = price;
-                        setItems(newItems);
+                        updateItemPrice(index, price);
                       }}
                     />
                   </div>
@@ -223,9 +245,7 @@ const SaleForm = ({
                       value={item.subtotal}
                       onChange={(e) => {
                         const subtotal = parseFloat(e.target.value) || 0;
-                        const newItems = [...items];
-                        newItems[index].subtotal = subtotal;
-                        setItems(newItems);
+                        updateItemSubtotal(index, subtotal);
                       }}
                     />
                   </div>

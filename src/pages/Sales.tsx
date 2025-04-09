@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -25,7 +26,7 @@ import { toast } from "sonner";
 import SaleForm, { SaleFormData } from "@/components/SaleForm";
 
 // Mock data for sales
-const salesData = [
+const initialSalesData = [
   {
     id: "S001",
     date: "2023-09-01",
@@ -174,7 +175,7 @@ const salesData = [
 const Sales = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [currentSale, setCurrentSale] = useState<SaleFormData | null>(null);
+  const [salesData, setSalesData] = useState(initialSalesData);
   const navigate = useNavigate();
 
   const filteredSales = salesData.filter((sale) => {
@@ -192,6 +193,10 @@ const Sales = () => {
 
   const handleAddSubmit = (data: SaleFormData) => {
     console.log("Add sale:", data);
+    
+    // Add the new sale to the salesData array
+    setSalesData([...salesData, data]);
+    
     toast.success(`Sale ${data.id} added successfully`);
     setIsAddDialogOpen(false);
   };
