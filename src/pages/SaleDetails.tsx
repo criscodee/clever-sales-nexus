@@ -1,6 +1,10 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Edit } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import {
   Table,
   TableBody,
@@ -9,10 +13,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
+import SaleForm, { SaleFormData } from "@/components/SaleForm";
 
 // Mock data for sales details
 const getSaleById = (id: string) => {
@@ -73,8 +81,9 @@ const getSaleById = (id: string) => {
 const SaleDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [sale, setSale] = useState<any>(null);
+  const [sale, setSale] = useState<SaleFormData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -84,6 +93,14 @@ const SaleDetails = () => {
       setLoading(false);
     }
   }, [id]);
+
+  const handleEditSubmit = (data: SaleFormData) => {
+    // In a real app, this would call an API to update the data
+    console.log("Update sale:", data);
+    setSale(data);
+    toast.success(`Sale ${data.id} updated successfully`);
+    setIsEditDialogOpen(false);
+  };
 
   if (loading) {
     return <div className="flex justify-center items-center h-64">Loading...</div>;
@@ -95,17 +112,26 @@ const SaleDetails = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/sales")}
+            className="mr-4"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Sales
+          </Button>
+          <h1 className="text-3xl font-bold tracking-tight">Sale Details: {sale.id}</h1>
+        </div>
         <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate("/sales")}
-          className="mr-4"
+          onClick={() => setIsEditDialogOpen(true)}
+          className="flex items-center gap-1"
         >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Sales
+          <Edit className="h-4 w-4 mr-2" />
+          Edit Sale
         </Button>
-        <h1 className="text-3xl font-bold tracking-tight">Sale Details: {sale.id}</h1>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -155,7 +181,7 @@ const SaleDetails = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sale.items.map((item: any) => (
+                {sale.items.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell>{item.product}</TableCell>
                     <TableCell className="text-right">{item.quantity}</TableCell>
@@ -172,6 +198,21 @@ const SaleDetails = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Edit Sale Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[800px]">
+          <DialogHeader>
+            <DialogTitle>Edit Sale</DialogTitle>
+          </DialogHeader>
+          <SaleForm
+            initialData={sale}
+            onSubmit={handleEditSubmit}
+            onCancel={() => setIsEditDialogOpen(false)}
+            isEditing
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

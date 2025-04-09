@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -11,7 +10,20 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, PlusCircle, Eye } from "lucide-react";
+import { 
+  Search, 
+  PlusCircle, 
+  Eye, 
+  Edit,
+} from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
+import SaleForm, { SaleFormData } from "@/components/SaleForm";
 
 // Mock data for sales
 const salesData = [
@@ -21,6 +33,22 @@ const salesData = [
     customer: "Acme Corp",
     employee: "John Smith",
     amount: 1200.50,
+    items: [
+      {
+        id: 1,
+        product: "Laptop",
+        quantity: 2,
+        price: 500,
+        subtotal: 1000
+      },
+      {
+        id: 2,
+        product: "Monitor",
+        quantity: 1,
+        price: 200.50,
+        subtotal: 200.50
+      },
+    ]
   },
   {
     id: "S002",
@@ -75,6 +103,9 @@ const salesData = [
 
 const Sales = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [currentSale, setCurrentSale] = useState<SaleFormData | null>(null);
   const navigate = useNavigate();
 
   const filteredSales = salesData.filter((sale) => {
@@ -90,11 +121,28 @@ const Sales = () => {
     navigate(`/sales/${id}`);
   };
 
+  const handleEdit = (sale: SaleFormData) => {
+    setCurrentSale(sale);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleAddSubmit = (data: SaleFormData) => {
+    console.log("Add sale:", data);
+    toast.success(`Sale ${data.id} added successfully`);
+    setIsAddDialogOpen(false);
+  };
+
+  const handleEditSubmit = (data: SaleFormData) => {
+    console.log("Update sale:", data);
+    toast.success(`Sale ${data.id} updated successfully`);
+    setIsEditDialogOpen(false);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight">Sales</h1>
-        <Button>
+        <Button onClick={() => setIsAddDialogOpen(true)}>
           <PlusCircle className="mr-2 h-4 w-4" /> Add Sale
         </Button>
       </div>
@@ -142,15 +190,26 @@ const Sales = () => {
                     ${sale.amount.toFixed(2)}
                   </TableCell>
                   <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleViewDetails(sale.id)}
-                      className="flex items-center gap-1"
-                    >
-                      <Eye className="h-4 w-4" />
-                      <span>Details</span>
-                    </Button>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleViewDetails(sale.id)}
+                        className="flex items-center gap-1"
+                      >
+                        <Eye className="h-4 w-4" />
+                        <span>Details</span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(sale)}
+                        className="flex items-center gap-1"
+                      >
+                        <Edit className="h-4 w-4" />
+                        <span>Edit</span>
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
@@ -158,6 +217,34 @@ const Sales = () => {
           </TableBody>
         </Table>
       </div>
+
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="sm:max-w-[800px]">
+          <DialogHeader>
+            <DialogTitle>Add New Sale</DialogTitle>
+          </DialogHeader>
+          <SaleForm
+            onSubmit={handleAddSubmit}
+            onCancel={() => setIsAddDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[800px]">
+          <DialogHeader>
+            <DialogTitle>Edit Sale</DialogTitle>
+          </DialogHeader>
+          {currentSale && (
+            <SaleForm
+              initialData={currentSale}
+              onSubmit={handleEditSubmit}
+              onCancel={() => setIsEditDialogOpen(false)}
+              isEditing
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
