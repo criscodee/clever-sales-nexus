@@ -14,7 +14,6 @@ import {
   Search, 
   PlusCircle, 
   Eye, 
-  Edit,
 } from "lucide-react";
 import {
   Dialog,
@@ -56,6 +55,22 @@ const salesData = [
     customer: "Globex Inc",
     employee: "Jane Doe",
     amount: 850.75,
+    items: [
+      {
+        id: 1,
+        product: "Desktop PC",
+        quantity: 1,
+        price: 800,
+        subtotal: 800
+      },
+      {
+        id: 2,
+        product: "Keyboard",
+        quantity: 2,
+        price: 25.37,
+        subtotal: 50.75
+      },
+    ]
   },
   {
     id: "S003",
@@ -63,6 +78,22 @@ const salesData = [
     customer: "Stark Industries",
     employee: "Michael Johnson",
     amount: 3200.00,
+    items: [
+      {
+        id: 1,
+        product: "Server",
+        quantity: 1,
+        price: 2500,
+        subtotal: 2500
+      },
+      {
+        id: 2,
+        product: "Software License",
+        quantity: 5,
+        price: 140,
+        subtotal: 700
+      },
+    ]
   },
   {
     id: "S004",
@@ -70,6 +101,29 @@ const salesData = [
     customer: "Wayne Enterprises",
     employee: "Sarah Williams",
     amount: 1750.25,
+    items: [
+      {
+        id: 1,
+        product: "Tablet",
+        quantity: 3,
+        price: 350,
+        subtotal: 1050
+      },
+      {
+        id: 2,
+        product: "Case",
+        quantity: 3,
+        price: 25,
+        subtotal: 75
+      },
+      {
+        id: 3,
+        product: "Screen Protector",
+        quantity: 5,
+        price: 15,
+        subtotal: 75
+      },
+    ]
   },
   {
     id: "S005",
@@ -77,6 +131,22 @@ const salesData = [
     customer: "LexCorp",
     employee: "David Brown",
     amount: 950.00,
+    items: [
+      {
+        id: 1,
+        product: "Printer",
+        quantity: 1,
+        price: 750,
+        subtotal: 750
+      },
+      {
+        id: 2,
+        product: "Ink Cartridges",
+        quantity: 4,
+        price: 50,
+        subtotal: 200
+      },
+    ]
   },
   {
     id: "S006",
@@ -104,7 +174,6 @@ const salesData = [
 const Sales = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentSale, setCurrentSale] = useState<SaleFormData | null>(null);
   const navigate = useNavigate();
 
@@ -121,21 +190,10 @@ const Sales = () => {
     navigate(`/sales/${id}`);
   };
 
-  const handleEdit = (sale: SaleFormData) => {
-    setCurrentSale(sale);
-    setIsEditDialogOpen(true);
-  };
-
   const handleAddSubmit = (data: SaleFormData) => {
     console.log("Add sale:", data);
     toast.success(`Sale ${data.id} added successfully`);
     setIsAddDialogOpen(false);
-  };
-
-  const handleEditSubmit = (data: SaleFormData) => {
-    console.log("Update sale:", data);
-    toast.success(`Sale ${data.id} updated successfully`);
-    setIsEditDialogOpen(false);
   };
 
   return (
@@ -200,15 +258,6 @@ const Sales = () => {
                         <Eye className="h-4 w-4" />
                         <span>Details</span>
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit(sale)}
-                        className="flex items-center gap-1"
-                      >
-                        <Edit className="h-4 w-4" />
-                        <span>Edit</span>
-                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -227,22 +276,6 @@ const Sales = () => {
             onSubmit={handleAddSubmit}
             onCancel={() => setIsAddDialogOpen(false)}
           />
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[800px]">
-          <DialogHeader>
-            <DialogTitle>Edit Sale</DialogTitle>
-          </DialogHeader>
-          {currentSale && (
-            <SaleForm
-              initialData={currentSale}
-              onSubmit={handleEditSubmit}
-              onCancel={() => setIsEditDialogOpen(false)}
-              isEditing
-            />
-          )}
         </DialogContent>
       </Dialog>
     </div>
