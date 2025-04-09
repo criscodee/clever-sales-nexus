@@ -62,19 +62,6 @@ const SaleForm = ({
     form.setValue("amount", total);
   }, [items, form]);
 
-  // Update subtotal when quantity or price changes
-  const updateItemSubtotal = (index: number, quantity: number, price: number) => {
-    const newItems = [...items];
-    const subtotal = quantity * price;
-    newItems[index] = {
-      ...newItems[index],
-      quantity,
-      price,
-      subtotal
-    };
-    setItems(newItems);
-  };
-
   const addItem = () => {
     setItems([
       ...items,
@@ -204,7 +191,9 @@ const SaleForm = ({
                       value={item.quantity}
                       onChange={(e) => {
                         const quantity = parseInt(e.target.value) || 0;
-                        updateItemSubtotal(index, quantity, item.price);
+                        const newItems = [...items];
+                        newItems[index].quantity = quantity;
+                        setItems(newItems);
                       }}
                     />
                   </div>
@@ -218,7 +207,9 @@ const SaleForm = ({
                       value={item.price}
                       onChange={(e) => {
                         const price = parseFloat(e.target.value) || 0;
-                        updateItemSubtotal(index, item.quantity, price);
+                        const newItems = [...items];
+                        newItems[index].price = price;
+                        setItems(newItems);
                       }}
                     />
                   </div>
@@ -227,9 +218,15 @@ const SaleForm = ({
                     <FormLabel>Subtotal</FormLabel>
                     <Input
                       type="number"
-                      value={item.subtotal.toFixed(2)}
-                      readOnly
-                      className="bg-muted"
+                      min="0"
+                      step="0.01"
+                      value={item.subtotal}
+                      onChange={(e) => {
+                        const subtotal = parseFloat(e.target.value) || 0;
+                        const newItems = [...items];
+                        newItems[index].subtotal = subtotal;
+                        setItems(newItems);
+                      }}
                     />
                   </div>
                 </div>
