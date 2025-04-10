@@ -33,6 +33,10 @@ export interface CustomDatabase extends GeneratedDatabase {
         Update: Partial<SalesItemRow>;
       };
     } & GeneratedDatabase['public']['Tables'];
+    Views: GeneratedDatabase['public']['Views'];
+    Functions: GeneratedDatabase['public']['Functions'];
+    Enums: GeneratedDatabase['public']['Enums'];
+    CompositeTypes: GeneratedDatabase['public']['CompositeTypes'];
   };
 }
 
