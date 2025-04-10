@@ -177,6 +177,16 @@ export const useSalesData = () => {
       
       if (salesError) {
         console.error('Error fetching sales records:', salesError);
+        setSalesData(initialSalesData); // Use initial data if there's an error
+        setLoading(false);
+        return;
+      }
+      
+      // If no sales records found in database, use initial data
+      if (!salesRecords || salesRecords.length === 0) {
+        console.log('No sales records found in database, using initial data');
+        setSalesData(initialSalesData);
+        setLoading(false);
         return;
       }
       
@@ -203,12 +213,11 @@ export const useSalesData = () => {
         })
       );
       
-      // If we have data from Supabase, use it. Otherwise, use initial data
-      if (salesWithItems.length > 0) {
-        setSalesData(salesWithItems as SaleFormData[]);
-      }
+      setSalesData(salesWithItems as SaleFormData[]);
     } catch (error) {
       console.error('Error in fetchSalesData:', error);
+      // Fallback to initial data if there's an error
+      setSalesData(initialSalesData);
     } finally {
       setLoading(false);
     }

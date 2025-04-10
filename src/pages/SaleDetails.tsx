@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -18,6 +17,7 @@ import { toast } from "sonner";
 import { SaleFormData } from "@/components/SaleForm";
 import { supabase } from "@/integrations/supabase/client";
 import { SalesItemRow, SalesRecordRow } from "@/types/supabase";
+import { initialSalesData } from "@/utils/salesUtils";
 
 const SaleDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -35,7 +35,10 @@ const SaleDetails = () => {
     try {
       setLoading(true);
       
-      // Fetch the sale record
+      // Check if the sale exists in the mock data
+      const mockSale = initialSalesData.find(sale => sale.id === saleId);
+      
+      // Fetch the sale record from Supabase
       const { data: saleRecord, error: saleError } = await supabase
         .from('sales_records')
         .select('*')
@@ -44,9 +47,12 @@ const SaleDetails = () => {
       
       if (saleError) {
         console.error('Error fetching sale record:', saleError);
-        // If no data in Supabase yet, fall back to mock data
-        const mockSale = getMockSaleById(saleId);
-        setSale(mockSale);
+        // If no data in Supabase or there's an error, fall back to mock data
+        if (mockSale) {
+          setSale(mockSale);
+        } else {
+          setSale(getMockSaleById(saleId));
+        }
         setLoading(false);
         return;
       }
@@ -80,6 +86,13 @@ const SaleDetails = () => {
       setSale(formattedSale);
     } catch (error) {
       console.error('Error in fetchSaleDetails:', error);
+      // Fall back to mock data if there's an error
+      const mockSale = initialSalesData.find(sale => sale.id === saleId);
+      if (mockSale) {
+        setSale(mockSale);
+      } else {
+        setSale(getMockSaleById(saleId));
+      }
     } finally {
       setLoading(false);
     }
