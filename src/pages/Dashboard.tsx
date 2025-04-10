@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3, DollarSign, ShoppingCart, Users, PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,7 +12,14 @@ import {
 } from "@/components/ui/dialog";
 import SaleForm, { SaleFormData } from "@/components/SaleForm";
 import { toast } from "sonner";
-import { useSalesData, generateSaleId } from "@/utils/salesUtils";
+import { 
+  useSalesData, 
+  generateSaleId,
+  calculateTotalRevenue,
+  countUniqueCustomers,
+  calculateTopProducts,
+  TopProduct
+} from "@/utils/salesUtils";
 
 const Dashboard = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -234,53 +240,5 @@ const Dashboard = () => {
     </div>
   );
 };
-
-// Helper functions
-function calculateTotalRevenue(salesData: SaleFormData[]): number {
-  return salesData.reduce((sum, sale) => sum + Number(sale.amount), 0);
-}
-
-function countUniqueCustomers(salesData: SaleFormData[]): number {
-  const uniqueCustomers = new Set(salesData.map(sale => sale.customer));
-  return uniqueCustomers.size;
-}
-
-type TopProduct = {
-  name: string;
-  category: string;
-  sold: number;
-  revenue: number;
-};
-
-function calculateTopProducts(salesData: SaleFormData[]): TopProduct[] {
-  const productMap = new Map<string, TopProduct>();
-  
-  // Process all sales with items
-  salesData.forEach(sale => {
-    if (sale.items) {
-      sale.items.forEach(item => {
-        if (!item.product) return;
-        
-        const existing = productMap.get(item.product);
-        if (existing) {
-          existing.sold += item.quantity;
-          existing.revenue += item.subtotal;
-        } else {
-          productMap.set(item.product, {
-            name: item.product,
-            category: `Category ${Math.floor(Math.random() * 5) + 1}`,
-            sold: item.quantity,
-            revenue: item.subtotal
-          });
-        }
-      });
-    }
-  });
-  
-  // Sort by revenue and take top 5
-  return Array.from(productMap.values())
-    .sort((a, b) => b.revenue - a.revenue)
-    .slice(0, 5);
-}
 
 export default Dashboard;

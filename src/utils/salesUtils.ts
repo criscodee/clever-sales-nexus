@@ -132,6 +132,7 @@ export const initialSalesData = [
     customer: "Umbrella Corp",
     employee: "Emily Davis",
     amount: 2100.50,
+    items: [] // Initialize with empty array instead of undefined
   },
   {
     id: "S007",
@@ -139,6 +140,7 @@ export const initialSalesData = [
     customer: "Cyberdyne Systems",
     employee: "Robert Wilson",
     amount: 1500.00,
+    items: [] // Initialize with empty array instead of undefined
   },
   {
     id: "S008",
@@ -146,6 +148,7 @@ export const initialSalesData = [
     customer: "Oscorp",
     employee: "Jennifer Lee",
     amount: 3750.25,
+    items: [] // Initialize with empty array instead of undefined
   },
 ];
 
@@ -185,4 +188,55 @@ export const generateSaleId = () => {
 // Calculate subtotal based on price and quantity
 export const calculateSubtotal = (price: number, quantity: number) => {
   return Number((price * quantity).toFixed(2));
+};
+
+// Calculate total revenue from sales data
+export const calculateTotalRevenue = (salesData: SaleFormData[]): number => {
+  return salesData.reduce((sum, sale) => sum + Number(sale.amount), 0);
+};
+
+// Count unique customers
+export const countUniqueCustomers = (salesData: SaleFormData[]): number => {
+  const uniqueCustomers = new Set(salesData.map(sale => sale.customer));
+  return uniqueCustomers.size;
+};
+
+// Type for top product
+export type TopProduct = {
+  name: string;
+  category: string;
+  sold: number;
+  revenue: number;
+};
+
+// Calculate top products
+export const calculateTopProducts = (salesData: SaleFormData[]): TopProduct[] => {
+  const productMap = new Map<string, TopProduct>();
+  
+  // Process all sales with items
+  salesData.forEach(sale => {
+    if (sale.items && sale.items.length > 0) {
+      sale.items.forEach(item => {
+        if (!item.product) return;
+        
+        const existing = productMap.get(item.product);
+        if (existing) {
+          existing.sold += item.quantity;
+          existing.revenue += item.subtotal;
+        } else {
+          productMap.set(item.product, {
+            name: item.product,
+            category: `Category ${Math.floor(Math.random() * 5) + 1}`,
+            sold: item.quantity,
+            revenue: item.subtotal
+          });
+        }
+      });
+    }
+  });
+  
+  // Sort by revenue and take top 5
+  return Array.from(productMap.values())
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 5);
 };
