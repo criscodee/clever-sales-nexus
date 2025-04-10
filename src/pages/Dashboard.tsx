@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3, DollarSign, ShoppingCart, Users, PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,7 @@ import {
 
 const Dashboard = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const { salesData, addSale } = useSalesData();
+  const { salesData, loading, addSale } = useSalesData();
   const navigate = useNavigate();
 
   // Generate initial form data with a unique ID and today's date
@@ -36,11 +37,21 @@ const Dashboard = () => {
     items: [{ id: 1, product: "", quantity: 1, price: 0, subtotal: 0 }]
   };
 
-  const handleAddSubmit = (data: SaleFormData) => {
-    const saleId = addSale(data);
-    toast.success(`Sale ${saleId} added successfully`);
-    setIsAddDialogOpen(false);
-    navigate("/sales");
+  const handleAddSubmit = async (data: SaleFormData) => {
+    try {
+      const saleId = await addSale(data);
+      
+      if (saleId) {
+        toast.success(`Sale ${saleId} added successfully and saved to database`);
+        setIsAddDialogOpen(false);
+        navigate("/sales");
+      } else {
+        toast.error("Failed to save sale. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error adding sale:", error);
+      toast.error("An error occurred while saving the sale");
+    }
   };
 
   // Get recent sales for the dashboard display
@@ -48,6 +59,14 @@ const Dashboard = () => {
 
   // Calculate top products from sales data
   const topProducts = calculateTopProducts(salesData);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <p className="text-lg">Loading sales data...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

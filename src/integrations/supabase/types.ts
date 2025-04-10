@@ -245,6 +245,68 @@ export type Database = {
           },
         ]
       }
+      sales_items: {
+        Row: {
+          id: number
+          price: number
+          product: string
+          quantity: number
+          sale_id: string | null
+          subtotal: number
+        }
+        Insert: {
+          id?: number
+          price: number
+          product: string
+          quantity: number
+          sale_id?: string | null
+          subtotal: number
+        }
+        Update: {
+          id?: number
+          price?: number
+          product?: string
+          quantity?: number
+          sale_id?: string | null
+          subtotal?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_items_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_records: {
+        Row: {
+          amount: number
+          created_at: string | null
+          customer: string
+          date: string
+          employee: string
+          id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          customer: string
+          date: string
+          employee: string
+          id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          customer?: string
+          date?: string
+          employee?: string
+          id?: string
+        }
+        Relationships: []
+      }
       salesdetail: {
         Row: {
           prodcode: string

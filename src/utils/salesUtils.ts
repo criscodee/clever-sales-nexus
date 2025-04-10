@@ -1,6 +1,7 @@
 
 import { SaleFormData } from "@/components/SaleForm";
 import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 // Mock data for sales
 export const initialSalesData = [
@@ -155,8 +156,114 @@ export const initialSalesData = [
 // Custom hook to manage sales data
 export const useSalesData = () => {
   const [salesData, setSalesData] = useState(initialSalesData);
+  const [loading, setLoading] = useState(true);
 
-  const addSale = (newSale: SaleFormData) => {
+  // Fetch sales data from Supabase on component mount
+  useEffect(() => {
+    fetchSalesData();
+  }, []);
+
+  // Fetch sales data from Supabase
+  const fetchSalesData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch all sales records
+      const { data: salesRecords, error: salesError } = await supabase
+        .from('sales_records')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (salesError) {
+        console.error('Error fetching sales records:', salesError);
+        return;
+      }
+      
+      // For each sale, fetch its items
+      const salesWithItems = await Promise.all(
+        salesRecords.map(async (sale) => {
+          const { data: items, error: itemsError } = await supabase
+            .from('sales_items')
+            .select('*')
+            .eq('sale_id', sale.id);
+          
+          if (itemsError) {
+            console.error('Error fetching sale items:', itemsError);
+            return {
+              ...sale,
+              items: []
+            };
+          }
+          
+          return {
+            ...sale,
+            items: items || []
+          };
+        })
+      );
+      
+      // If we have data from Supabase, use it. Otherwise, use initial data
+      if (salesWithItems.length > 0) {
+        setSalesData(salesWithItems);
+      }
+    } catch (error) {
+      console.error('Error in fetchSalesData:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Save a new sale to Supabase
+  const saveSaleToSupabase = async (sale: SaleFormData) => {
+    try {
+      // First, insert the sale record
+      const { data: saleRecord, error: saleError } = await supabase
+        .from('sales_records')
+        .insert({
+          id: sale.id,
+          date: sale.date,
+          customer: sale.customer,
+          employee: sale.employee,
+          amount: sale.amount
+        })
+        .select()
+        .single();
+      
+      if (saleError) {
+        console.error('Error inserting sale record:', saleError);
+        return null;
+      }
+      
+      // Then, insert all sale items
+      if (sale.items && sale.items.length > 0) {
+        const saleItems = sale.items.map(item => ({
+          sale_id: sale.id,
+          product: item.product,
+          quantity: item.quantity,
+          price: item.price,
+          subtotal: item.subtotal
+        }));
+        
+        const { error: itemsError } = await supabase
+          .from('sales_items')
+          .insert(saleItems);
+        
+        if (itemsError) {
+          console.error('Error inserting sale items:', itemsError);
+          // Consider rolling back the sale record here
+          return null;
+        }
+      }
+      
+      // Return the ID of the created sale
+      return sale.id;
+    } catch (error) {
+      console.error('Error in saveSaleToSupabase:', error);
+      return null;
+    }
+  };
+
+  const addSale = async (newSale: SaleFormData) => {
     // Ensure all numeric values are properly formatted
     const formattedSale = {
       ...newSale,
@@ -169,14 +276,23 @@ export const useSalesData = () => {
       })) : []
     };
     
-    setSalesData(prev => [formattedSale, ...prev]);
-    return formattedSale.id;
+    // Save to Supabase first
+    const saleId = await saveSaleToSupabase(formattedSale);
+    
+    if (saleId) {
+      // If successful, update local state
+      setSalesData(prev => [formattedSale, ...prev]);
+    }
+    
+    return saleId;
   };
 
   return {
     salesData,
+    loading,
     setSalesData,
-    addSale
+    addSale,
+    fetchSalesData
   };
 };
 

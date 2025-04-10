@@ -16,62 +16,7 @@ import {
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import { SaleFormData } from "@/components/SaleForm";
-
-// Mock data for sales details
-const getSaleById = (id: string) => {
-  const sale = {
-    id: id,
-    date: id === "S001" 
-      ? "2023-09-01"
-      : id === "S002"
-      ? "2023-09-03" 
-      : "2023-09-05",
-    customer: id === "S001" 
-      ? "Acme Corp"
-      : id === "S002"
-      ? "Globex Inc" 
-      : "Stark Industries",
-    employee: id === "S001" 
-      ? "John Smith"
-      : id === "S002"
-      ? "Jane Doe" 
-      : "Michael Johnson",
-    amount: id === "S001" 
-      ? 1200.50
-      : id === "S002"
-      ? 850.75 
-      : 3200.00,
-    items: [
-      {
-        id: 1,
-        product: id === "S001" ? "Laptop" : "Desktop PC",
-        quantity: id === "S001" ? 2 : 1,
-        price: id === "S001" ? 500 : 800,
-        subtotal: id === "S001" ? 1000 : 800
-      },
-      {
-        id: 2,
-        product: id === "S001" ? "Monitor" : "Keyboard",
-        quantity: id === "S001" ? 1 : 2,
-        price: id === "S001" ? 200.50 : 25.37,
-        subtotal: id === "S001" ? 200.50 : 50.75
-      },
-    ]
-  };
-  
-  if (id !== "S001" && id !== "S002") {
-    // Add a random third item for other IDs
-    sale.items.push({
-      id: 3,
-      product: "Software License",
-      quantity: 10,
-      price: 235,
-      subtotal: 2350
-    });
-  }
-  
-  return sale;
-};
+import { supabase } from "@/integrations/supabase/client";
 
 const SaleDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -81,15 +26,122 @@ const SaleDetails = () => {
 
   useEffect(() => {
     if (id) {
-      // In a real app, this would be an API call
-      const saleData = getSaleById(id);
-      setSale(saleData);
-      setLoading(false);
+      fetchSaleDetails(id);
     }
   }, [id]);
 
-  const updateItemPrice = (index: number, price: number) => {
-    if (!sale) return;
+  const fetchSaleDetails = async (saleId: string) => {
+    try {
+      setLoading(true);
+      
+      // Fetch the sale record
+      const { data: saleRecord, error: saleError } = await supabase
+        .from('sales_records')
+        .select('*')
+        .eq('id', saleId)
+        .single();
+      
+      if (saleError) {
+        console.error('Error fetching sale record:', saleError);
+        // If no data in Supabase yet, fall back to mock data
+        const mockSale = getMockSaleById(saleId);
+        setSale(mockSale);
+        setLoading(false);
+        return;
+      }
+      
+      // Fetch the sale items
+      const { data: saleItems, error: itemsError } = await supabase
+        .from('sales_items')
+        .select('*')
+        .eq('sale_id', saleId);
+      
+      if (itemsError) {
+        console.error('Error fetching sale items:', itemsError);
+      }
+      
+      // Format the sale data
+      const formattedSale: SaleFormData = {
+        id: saleRecord.id,
+        date: saleRecord.date,
+        customer: saleRecord.customer,
+        employee: saleRecord.employee,
+        amount: saleRecord.amount,
+        items: saleItems?.map((item, index) => ({
+          id: index + 1,
+          product: item.product,
+          quantity: item.quantity,
+          price: item.price,
+          subtotal: item.subtotal
+        })) || []
+      };
+      
+      setSale(formattedSale);
+    } catch (error) {
+      console.error('Error in fetchSaleDetails:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Mock data for sales details if not available in Supabase
+  const getMockSaleById = (saleId: string) => {
+    const sale = {
+      id: saleId,
+      date: saleId === "S001" 
+        ? "2023-09-01"
+        : saleId === "S002"
+        ? "2023-09-03" 
+        : "2023-09-05",
+      customer: saleId === "S001" 
+        ? "Acme Corp"
+        : saleId === "S002"
+        ? "Globex Inc" 
+        : "Stark Industries",
+      employee: saleId === "S001" 
+        ? "John Smith"
+        : saleId === "S002"
+        ? "Jane Doe" 
+        : "Michael Johnson",
+      amount: saleId === "S001" 
+        ? 1200.50
+        : saleId === "S002"
+        ? 850.75 
+        : 3200.00,
+      items: [
+        {
+          id: 1,
+          product: saleId === "S001" ? "Laptop" : "Desktop PC",
+          quantity: saleId === "S001" ? 2 : 1,
+          price: saleId === "S001" ? 500 : 800,
+          subtotal: saleId === "S001" ? 1000 : 800
+        },
+        {
+          id: 2,
+          product: saleId === "S001" ? "Monitor" : "Keyboard",
+          quantity: saleId === "S001" ? 1 : 2,
+          price: saleId === "S001" ? 200.50 : 25.37,
+          subtotal: saleId === "S001" ? 200.50 : 50.75
+        },
+      ]
+    };
+    
+    if (saleId !== "S001" && saleId !== "S002") {
+      // Add a random third item for other IDs
+      sale.items.push({
+        id: 3,
+        product: "Software License",
+        quantity: 10,
+        price: 235,
+        subtotal: 2350
+      });
+    }
+    
+    return sale;
+  };
+
+  const updateItemPrice = async (index: number, price: number) => {
+    if (!sale || !id) return;
     
     const updatedItems = [...sale.items];
     updatedItems[index] = {
@@ -102,11 +154,28 @@ const SaleDetails = () => {
       items: updatedItems
     });
     
-    toast.success("Price updated");
+    // Update in Supabase if this is a real sale (not mock data)
+    try {
+      const item = sale.items[index];
+      const { error } = await supabase
+        .from('sales_items')
+        .update({ price })
+        .eq('sale_id', id)
+        .eq('product', item.product)
+        .eq('quantity', item.quantity);
+      
+      if (error) {
+        console.error('Error updating item price:', error);
+      } else {
+        toast.success("Price updated");
+      }
+    } catch (error) {
+      console.error('Error in updateItemPrice:', error);
+    }
   };
 
-  const updateItemSubtotal = (index: number, subtotal: number) => {
-    if (!sale) return;
+  const updateItemSubtotal = async (index: number, subtotal: number) => {
+    if (!sale || !id) return;
     
     const updatedItems = [...sale.items];
     updatedItems[index] = {
@@ -123,7 +192,36 @@ const SaleDetails = () => {
       amount: totalAmount
     });
     
-    toast.success("Subtotal updated");
+    // Update in Supabase if this is a real sale (not mock data)
+    try {
+      const item = sale.items[index];
+      
+      // Update the item
+      const { error: itemError } = await supabase
+        .from('sales_items')
+        .update({ subtotal })
+        .eq('sale_id', id)
+        .eq('product', item.product)
+        .eq('quantity', item.quantity);
+      
+      if (itemError) {
+        console.error('Error updating item subtotal:', itemError);
+      } else {
+        // Update the total amount in the sale record
+        const { error: saleError } = await supabase
+          .from('sales_records')
+          .update({ amount: totalAmount })
+          .eq('id', id);
+        
+        if (saleError) {
+          console.error('Error updating sale amount:', saleError);
+        } else {
+          toast.success("Subtotal updated");
+        }
+      }
+    } catch (error) {
+      console.error('Error in updateItemSubtotal:', error);
+    }
   };
 
   if (loading) {
