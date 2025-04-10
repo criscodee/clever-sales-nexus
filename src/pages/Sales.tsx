@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -20,10 +21,11 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import SaleForm, { SaleFormData } from "@/components/SaleForm";
-import { useSalesData } from "@/utils/salesUtils";
+import { useSalesData, generateSaleId } from "@/utils/salesUtils";
 
 const Sales = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -42,6 +44,16 @@ const Sales = () => {
 
   const handleViewDetails = (id: string) => {
     navigate(`/sales/${id}`);
+  };
+
+  // Generate initial form data with a unique ID and today's date
+  const initialFormData = {
+    id: generateSaleId(),
+    date: new Date().toISOString().split("T")[0],
+    customer: "",
+    employee: "",
+    amount: 0,
+    items: [{ id: 1, product: "", quantity: 1, price: 0, subtotal: 0 }]
   };
 
   const handleAddSubmit = (data: SaleFormData) => {
@@ -125,8 +137,12 @@ const Sales = () => {
         <DialogContent className="sm:max-w-[800px]">
           <DialogHeader>
             <DialogTitle>Add New Sale</DialogTitle>
+            <DialogDescription>
+              Create a new sale record. Fill in all the details below.
+            </DialogDescription>
           </DialogHeader>
           <SaleForm
+            initialData={initialFormData}
             onSubmit={handleAddSubmit}
             onCancel={() => setIsAddDialogOpen(false)}
           />

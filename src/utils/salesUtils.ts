@@ -1,3 +1,4 @@
+
 import { SaleFormData } from "@/components/SaleForm";
 import { useState, useEffect } from "react";
 
@@ -153,8 +154,20 @@ export const useSalesData = () => {
   const [salesData, setSalesData] = useState(initialSalesData);
 
   const addSale = (newSale: SaleFormData) => {
-    setSalesData(prev => [...prev, newSale]);
-    return newSale.id;
+    // Ensure all numeric values are properly formatted
+    const formattedSale = {
+      ...newSale,
+      amount: Number(newSale.amount),
+      items: newSale.items ? newSale.items.map(item => ({
+        ...item,
+        quantity: Number(item.quantity),
+        price: Number(item.price),
+        subtotal: Number(item.subtotal)
+      })) : []
+    };
+    
+    setSalesData(prev => [formattedSale, ...prev]);
+    return formattedSale.id;
   };
 
   return {
@@ -162,4 +175,14 @@ export const useSalesData = () => {
     setSalesData,
     addSale
   };
+};
+
+// Generate a unique sale ID
+export const generateSaleId = () => {
+  return `S${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`;
+};
+
+// Calculate subtotal based on price and quantity
+export const calculateSubtotal = (price: number, quantity: number) => {
+  return Number((price * quantity).toFixed(2));
 };

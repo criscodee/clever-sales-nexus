@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3, DollarSign, ShoppingCart, Users, PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,12 +13,22 @@ import {
 } from "@/components/ui/dialog";
 import SaleForm, { SaleFormData } from "@/components/SaleForm";
 import { toast } from "sonner";
-import { useSalesData } from "@/utils/salesUtils";
+import { useSalesData, generateSaleId } from "@/utils/salesUtils";
 
 const Dashboard = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const { addSale } = useSalesData();
+  const { salesData, addSale } = useSalesData();
   const navigate = useNavigate();
+
+  // Generate initial form data with a unique ID and today's date
+  const initialFormData = {
+    id: generateSaleId(),
+    date: new Date().toISOString().split("T")[0],
+    customer: "",
+    employee: "",
+    amount: 0,
+    items: [{ id: 1, product: "", quantity: 1, price: 0, subtotal: 0 }]
+  };
 
   const handleAddSubmit = (data: SaleFormData) => {
     const saleId = addSale(data);
@@ -25,6 +36,12 @@ const Dashboard = () => {
     setIsAddDialogOpen(false);
     navigate("/sales");
   };
+
+  // Get recent sales for the dashboard display
+  const recentSales = salesData.slice(0, 5);
+
+  // Calculate top products from sales data
+  const topProducts = calculateTopProducts(salesData);
 
   return (
     <div className="space-y-6">
@@ -44,7 +61,9 @@ const Dashboard = () => {
                 <p className="text-sm font-medium text-muted-foreground">
                   Revenue
                 </p>
-                <p className="text-3xl font-bold">$45,231.89</p>
+                <p className="text-3xl font-bold">
+                  ${calculateTotalRevenue(salesData).toFixed(2)}
+                </p>
               </div>
               <div className="bg-primary/20 p-3 rounded-full">
                 <DollarSign className="h-6 w-6 text-primary" />
@@ -66,7 +85,7 @@ const Dashboard = () => {
                 <p className="text-sm font-medium text-muted-foreground">
                   Sales
                 </p>
-                <p className="text-3xl font-bold">+2350</p>
+                <p className="text-3xl font-bold">+{salesData.length}</p>
               </div>
               <div className="bg-primary/20 p-3 rounded-full">
                 <ShoppingCart className="h-6 w-6 text-primary" />
@@ -88,7 +107,7 @@ const Dashboard = () => {
                 <p className="text-sm font-medium text-muted-foreground">
                   New Customers
                 </p>
-                <p className="text-3xl font-bold">+573</p>
+                <p className="text-3xl font-bold">+{countUniqueCustomers(salesData)}</p>
               </div>
               <div className="bg-primary/20 p-3 rounded-full">
                 <Users className="h-6 w-6 text-primary" />
@@ -131,14 +150,14 @@ const Dashboard = () => {
           <CardHeader>
             <CardTitle>Recent Sales</CardTitle>
             <CardDescription>
-              You made 265 sales this month.
+              You made {salesData.length} sales this month.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {[1, 2, 3, 4, 5].map((item) => (
+              {recentSales.map((sale) => (
                 <div
-                  key={item}
+                  key={sale.id}
                   className="flex items-center justify-between border-b pb-2 last:border-0"
                 >
                   <div className="flex items-center space-x-3">
@@ -146,13 +165,13 @@ const Dashboard = () => {
                       <Users className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className="font-medium">Customer {item}</p>
+                      <p className="font-medium">{sale.customer}</p>
                       <p className="text-sm text-muted-foreground">
-                        customer{item}@example.com
+                        {sale.id} - {sale.date}
                       </p>
                     </div>
                   </div>
-                  <div className="font-medium">+${Math.floor(Math.random() * 1000)}.00</div>
+                  <div className="font-medium">${sale.amount.toFixed(2)}</div>
                 </div>
               ))}
             </div>
@@ -169,7 +188,7 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {["Product A", "Product B", "Product C", "Product D", "Product E"].map((product, index) => (
+              {topProducts.map((product, index) => (
                 <div
                   key={index}
                   className="flex items-center justify-between border-b pb-2 last:border-0"
@@ -179,15 +198,15 @@ const Dashboard = () => {
                       <ShoppingCart className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className="font-medium">{product}</p>
+                      <p className="font-medium">{product.name}</p>
                       <p className="text-sm text-muted-foreground">
-                        Category {index + 1}
+                        {product.category}
                       </p>
                     </div>
                   </div>
                   <div className="text-sm">
-                    <p className="font-medium">${Math.floor(Math.random() * 1000)}.00</p>
-                    <p className="text-muted-foreground">{Math.floor(Math.random() * 100)} sold</p>
+                    <p className="font-medium">${product.revenue.toFixed(2)}</p>
+                    <p className="text-muted-foreground">{product.sold} sold</p>
                   </div>
                 </div>
               ))}
@@ -206,6 +225,7 @@ const Dashboard = () => {
             </DialogDescription>
           </DialogHeader>
           <SaleForm
+            initialData={initialFormData}
             onSubmit={handleAddSubmit}
             onCancel={() => setIsAddDialogOpen(false)}
           />
@@ -214,5 +234,53 @@ const Dashboard = () => {
     </div>
   );
 };
+
+// Helper functions
+function calculateTotalRevenue(salesData: SaleFormData[]): number {
+  return salesData.reduce((sum, sale) => sum + Number(sale.amount), 0);
+}
+
+function countUniqueCustomers(salesData: SaleFormData[]): number {
+  const uniqueCustomers = new Set(salesData.map(sale => sale.customer));
+  return uniqueCustomers.size;
+}
+
+type TopProduct = {
+  name: string;
+  category: string;
+  sold: number;
+  revenue: number;
+};
+
+function calculateTopProducts(salesData: SaleFormData[]): TopProduct[] {
+  const productMap = new Map<string, TopProduct>();
+  
+  // Process all sales with items
+  salesData.forEach(sale => {
+    if (sale.items) {
+      sale.items.forEach(item => {
+        if (!item.product) return;
+        
+        const existing = productMap.get(item.product);
+        if (existing) {
+          existing.sold += item.quantity;
+          existing.revenue += item.subtotal;
+        } else {
+          productMap.set(item.product, {
+            name: item.product,
+            category: `Category ${Math.floor(Math.random() * 5) + 1}`,
+            sold: item.quantity,
+            revenue: item.subtotal
+          });
+        }
+      });
+    }
+  });
+  
+  // Sort by revenue and take top 5
+  return Array.from(productMap.values())
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 5);
+}
 
 export default Dashboard;

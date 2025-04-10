@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { generateSaleId, calculateSubtotal } from "@/utils/salesUtils";
 
 export type SaleFormData = {
   id: string;
@@ -41,25 +42,27 @@ const SaleForm = ({
   onCancel, 
   isEditing = false 
 }: SaleFormProps) => {
+  const defaultInitialData = {
+    id: generateSaleId(),
+    date: new Date().toISOString().split("T")[0],
+    customer: "",
+    employee: "",
+    amount: 0,
+    items: [{ id: 1, product: "", quantity: 1, price: 0, subtotal: 0 }]
+  };
+
   const [items, setItems] = useState<SaleFormData["items"]>(
-    initialData?.items || [{ id: 1, product: "", quantity: 1, price: 0, subtotal: 0 }]
+    initialData?.items || defaultInitialData.items
   );
 
   const form = useForm<SaleFormData>({
-    defaultValues: initialData || {
-      id: `S${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-      date: new Date().toISOString().split("T")[0],
-      customer: "",
-      employee: "",
-      amount: 0,
-      items: []
-    }
+    defaultValues: initialData || defaultInitialData
   });
 
   // Update amount when items change
   useEffect(() => {
-    const total = items.reduce((sum, item) => sum + item.subtotal, 0);
-    form.setValue("amount", total);
+    const total = items.reduce((sum, item) => sum + Number(item.subtotal), 0);
+    form.setValue("amount", Number(total.toFixed(2)));
   }, [items, form]);
 
   const addItem = () => {
@@ -88,8 +91,8 @@ const SaleForm = ({
     const newItems = [...items];
     newItems[index].price = price;
     
-    // Also update the subtotal based on quantity
-    newItems[index].subtotal = price * newItems[index].quantity;
+    // Update the subtotal based on quantity
+    newItems[index].subtotal = calculateSubtotal(price, newItems[index].quantity);
     
     setItems(newItems);
   };
@@ -98,9 +101,15 @@ const SaleForm = ({
     const newItems = [...items];
     newItems[index].quantity = quantity;
     
-    // Also update the subtotal based on price
-    newItems[index].subtotal = quantity * newItems[index].price;
+    // Update the subtotal based on price
+    newItems[index].subtotal = calculateSubtotal(newItems[index].price, quantity);
     
+    setItems(newItems);
+  };
+
+  const updateItemProduct = (index: number, product: string) => {
+    const newItems = [...items];
+    newItems[index].product = product;
     setItems(newItems);
   };
 
@@ -111,11 +120,24 @@ const SaleForm = ({
   };
 
   const handleSubmit = form.handleSubmit((data) => {
+    // Validate items have products
+    if (items.some(item => !item.product.trim())) {
+      toast.error("Please enter product names for all items");
+      return;
+    }
+    
     // Combine form data with items
     const completeData = {
       ...data,
-      items
+      items: items.map(item => ({
+        ...item,
+        // Ensure numeric values are properly formatted
+        quantity: Number(item.quantity),
+        price: Number(item.price),
+        subtotal: Number(item.subtotal)
+      }))
     };
+    
     onSubmit(completeData);
   });
 
@@ -199,11 +221,7 @@ const SaleForm = ({
                   <FormLabel>Product</FormLabel>
                   <Input
                     value={item.product}
-                    onChange={(e) => {
-                      const newItems = [...items];
-                      newItems[index].product = e.target.value;
-                      setItems(newItems);
-                    }}
+                    onChange={(e) => updateItemProduct(index, e.target.value)}
                     placeholder="Product name"
                   />
                 </div>
