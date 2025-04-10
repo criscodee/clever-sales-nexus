@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -24,158 +23,12 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import SaleForm, { SaleFormData } from "@/components/SaleForm";
-
-// Mock data for sales
-const initialSalesData = [
-  {
-    id: "S001",
-    date: "2023-09-01",
-    customer: "Acme Corp",
-    employee: "John Smith",
-    amount: 1200.50,
-    items: [
-      {
-        id: 1,
-        product: "Laptop",
-        quantity: 2,
-        price: 500,
-        subtotal: 1000
-      },
-      {
-        id: 2,
-        product: "Monitor",
-        quantity: 1,
-        price: 200.50,
-        subtotal: 200.50
-      },
-    ]
-  },
-  {
-    id: "S002",
-    date: "2023-09-03",
-    customer: "Globex Inc",
-    employee: "Jane Doe",
-    amount: 850.75,
-    items: [
-      {
-        id: 1,
-        product: "Desktop PC",
-        quantity: 1,
-        price: 800,
-        subtotal: 800
-      },
-      {
-        id: 2,
-        product: "Keyboard",
-        quantity: 2,
-        price: 25.37,
-        subtotal: 50.75
-      },
-    ]
-  },
-  {
-    id: "S003",
-    date: "2023-09-05",
-    customer: "Stark Industries",
-    employee: "Michael Johnson",
-    amount: 3200.00,
-    items: [
-      {
-        id: 1,
-        product: "Server",
-        quantity: 1,
-        price: 2500,
-        subtotal: 2500
-      },
-      {
-        id: 2,
-        product: "Software License",
-        quantity: 5,
-        price: 140,
-        subtotal: 700
-      },
-    ]
-  },
-  {
-    id: "S004",
-    date: "2023-09-07",
-    customer: "Wayne Enterprises",
-    employee: "Sarah Williams",
-    amount: 1750.25,
-    items: [
-      {
-        id: 1,
-        product: "Tablet",
-        quantity: 3,
-        price: 350,
-        subtotal: 1050
-      },
-      {
-        id: 2,
-        product: "Case",
-        quantity: 3,
-        price: 25,
-        subtotal: 75
-      },
-      {
-        id: 3,
-        product: "Screen Protector",
-        quantity: 5,
-        price: 15,
-        subtotal: 75
-      },
-    ]
-  },
-  {
-    id: "S005",
-    date: "2023-09-10",
-    customer: "LexCorp",
-    employee: "David Brown",
-    amount: 950.00,
-    items: [
-      {
-        id: 1,
-        product: "Printer",
-        quantity: 1,
-        price: 750,
-        subtotal: 750
-      },
-      {
-        id: 2,
-        product: "Ink Cartridges",
-        quantity: 4,
-        price: 50,
-        subtotal: 200
-      },
-    ]
-  },
-  {
-    id: "S006",
-    date: "2023-09-12",
-    customer: "Umbrella Corp",
-    employee: "Emily Davis",
-    amount: 2100.50,
-  },
-  {
-    id: "S007",
-    date: "2023-09-15",
-    customer: "Cyberdyne Systems",
-    employee: "Robert Wilson",
-    amount: 1500.00,
-  },
-  {
-    id: "S008",
-    date: "2023-09-18",
-    customer: "Oscorp",
-    employee: "Jennifer Lee",
-    amount: 3750.25,
-  },
-];
+import { useSalesData } from "@/utils/salesUtils";
 
 const Sales = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [salesData, setSalesData] = useState(initialSalesData);
+  const { salesData, addSale } = useSalesData();
   const navigate = useNavigate();
 
   const filteredSales = salesData.filter((sale) => {
@@ -192,12 +45,8 @@ const Sales = () => {
   };
 
   const handleAddSubmit = (data: SaleFormData) => {
-    console.log("Add sale:", data);
-    
-    // Add the new sale to the salesData array
-    setSalesData([...salesData, data]);
-    
-    toast.success(`Sale ${data.id} added successfully`);
+    const saleId = addSale(data);
+    toast.success(`Sale ${saleId} added successfully`);
     setIsAddDialogOpen(false);
   };
 

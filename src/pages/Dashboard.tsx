@@ -1,11 +1,39 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart3, DollarSign, ShoppingCart, Users } from "lucide-react";
+import { BarChart3, DollarSign, ShoppingCart, Users, PlusCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import SaleForm, { SaleFormData } from "@/components/SaleForm";
+import { toast } from "sonner";
+import { useSalesData } from "@/utils/salesUtils";
 
 const Dashboard = () => {
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const { addSale } = useSalesData();
+  const navigate = useNavigate();
+
+  const handleAddSubmit = (data: SaleFormData) => {
+    const saleId = addSale(data);
+    toast.success(`Sale ${saleId} added successfully`);
+    setIsAddDialogOpen(false);
+    navigate("/sales");
+  };
+
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <Button onClick={() => setIsAddDialogOpen(true)}>
+          <PlusCircle className="mr-2 h-4 w-4" /> Add Sale
+        </Button>
+      </div>
       
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {/* Revenue Card */}
@@ -167,6 +195,22 @@ const Dashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Add Sale Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="sm:max-w-[800px]">
+          <DialogHeader>
+            <DialogTitle>Add New Sale</DialogTitle>
+            <DialogDescription>
+              Create a new sale record. Fill in all the details below.
+            </DialogDescription>
+          </DialogHeader>
+          <SaleForm
+            onSubmit={handleAddSubmit}
+            onCancel={() => setIsAddDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
