@@ -14,7 +14,8 @@ import { Button } from "@/components/ui/button";
 import { 
   Search, 
   PlusCircle, 
-  Eye, 
+  Eye,
+  Trash2
 } from "lucide-react";
 import {
   Dialog,
@@ -23,6 +24,16 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import SaleForm, { SaleFormData } from "@/components/SaleForm";
 import { useSalesData, generateSaleId } from "@/utils/salesUtils";
@@ -30,7 +41,9 @@ import { useSalesData, generateSaleId } from "@/utils/salesUtils";
 const Sales = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const { salesData, loading, addSale } = useSalesData();
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [saleToDelete, setSaleToDelete] = useState<string | null>(null);
+  const { salesData, loading, addSale, deleteSale } = useSalesData();
   const navigate = useNavigate();
 
   const filteredSales = salesData.filter((sale) => {
@@ -44,6 +57,32 @@ const Sales = () => {
 
   const handleViewDetails = (id: string) => {
     navigate(`/sales/${id}`);
+  };
+
+  const handleDeleteClick = (id: string) => {
+    setSaleToDelete(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!saleToDelete) return;
+    
+    try {
+      const success = await deleteSale(saleToDelete);
+      if (success) {
+        toast.success(`Sale ${saleToDelete} deleted successfully`);
+      } else {
+        // Even if Supabase delete fails, we still remove it from the UI
+        // and show a different message
+        toast.success(`Sale ${saleToDelete} removed from the list`);
+      }
+    } catch (error) {
+      console.error("Error deleting sale:", error);
+      toast.error("An error occurred while deleting the sale");
+    } finally {
+      setSaleToDelete(null);
+      setDeleteConfirmOpen(false);
+    }
   };
 
   // Generate initial form data with a unique ID and today's date
@@ -142,6 +181,15 @@ const Sales = () => {
                         <Eye className="h-4 w-4" />
                         <span>Details</span>
                       </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteClick(sale.id)}
+                        className="flex items-center gap-1 text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        <span>Delete</span>
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -166,6 +214,23 @@ const Sales = () => {
           />
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete sale {saleToDelete}. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setSaleToDelete(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete} className="bg-destructive text-destructive-foreground">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

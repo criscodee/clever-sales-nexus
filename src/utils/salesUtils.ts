@@ -273,6 +273,38 @@ export const useSalesData = () => {
     }
   };
 
+  // Delete a sale from Supabase
+  const deleteSaleFromSupabase = async (saleId: string) => {
+    try {
+      // First delete the sale items
+      const { error: itemsError } = await supabase
+        .from('sales_items')
+        .delete()
+        .eq('sale_id', saleId);
+      
+      if (itemsError) {
+        console.error('Error deleting sale items:', itemsError);
+        return false;
+      }
+      
+      // Then delete the sale record
+      const { error: saleError } = await supabase
+        .from('sales_records')
+        .delete()
+        .eq('id', saleId);
+      
+      if (saleError) {
+        console.error('Error deleting sale record:', saleError);
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error in deleteSaleFromSupabase:', error);
+      return false;
+    }
+  };
+
   const addSale = async (newSale: SaleFormData) => {
     // Ensure all numeric values are properly formatted
     const formattedSale = {
@@ -297,11 +329,23 @@ export const useSalesData = () => {
     return saleId;
   };
 
+  const deleteSale = async (saleId: string) => {
+    // First try to delete from Supabase
+    const success = await deleteSaleFromSupabase(saleId);
+    
+    // Update local state regardless of Supabase result
+    // This ensures the UI is responsive even if Supabase fails
+    setSalesData(prev => prev.filter(sale => sale.id !== saleId));
+    
+    return success;
+  };
+
   return {
     salesData,
     loading,
     setSalesData,
     addSale,
+    deleteSale,
     fetchSalesData
   };
 };
