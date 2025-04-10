@@ -17,6 +17,7 @@ import {
 import { toast } from "sonner";
 import { SaleFormData } from "@/components/SaleForm";
 import { supabase } from "@/integrations/supabase/client";
+import { SalesItemRow, SalesRecordRow } from "@/types/supabase";
 
 const SaleDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -39,7 +40,7 @@ const SaleDetails = () => {
         .from('sales_records')
         .select('*')
         .eq('id', saleId)
-        .single();
+        .single() as { data: SalesRecordRow | null, error: any };
       
       if (saleError) {
         console.error('Error fetching sale record:', saleError);
@@ -54,7 +55,7 @@ const SaleDetails = () => {
       const { data: saleItems, error: itemsError } = await supabase
         .from('sales_items')
         .select('*')
-        .eq('sale_id', saleId);
+        .eq('sale_id', saleId) as { data: SalesItemRow[] | null, error: any };
       
       if (itemsError) {
         console.error('Error fetching sale items:', itemsError);
@@ -62,11 +63,11 @@ const SaleDetails = () => {
       
       // Format the sale data
       const formattedSale: SaleFormData = {
-        id: saleRecord.id,
-        date: saleRecord.date,
-        customer: saleRecord.customer,
-        employee: saleRecord.employee,
-        amount: saleRecord.amount,
+        id: saleRecord!.id,
+        date: saleRecord!.date,
+        customer: saleRecord!.customer,
+        employee: saleRecord!.employee,
+        amount: saleRecord!.amount,
         items: saleItems?.map((item, index) => ({
           id: index + 1,
           product: item.product,
@@ -162,7 +163,7 @@ const SaleDetails = () => {
         .update({ price })
         .eq('sale_id', id)
         .eq('product', item.product)
-        .eq('quantity', item.quantity);
+        .eq('quantity', item.quantity) as { data: any, error: any };
       
       if (error) {
         console.error('Error updating item price:', error);
@@ -202,7 +203,7 @@ const SaleDetails = () => {
         .update({ subtotal })
         .eq('sale_id', id)
         .eq('product', item.product)
-        .eq('quantity', item.quantity);
+        .eq('quantity', item.quantity) as { data: any, error: any };
       
       if (itemError) {
         console.error('Error updating item subtotal:', itemError);
@@ -211,7 +212,7 @@ const SaleDetails = () => {
         const { error: saleError } = await supabase
           .from('sales_records')
           .update({ amount: totalAmount })
-          .eq('id', id);
+          .eq('id', id) as { data: any, error: any };
         
         if (saleError) {
           console.error('Error updating sale amount:', saleError);

@@ -2,6 +2,7 @@
 import { SaleFormData } from "@/components/SaleForm";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { SalesItemRow, SalesRecordRow } from "@/types/supabase";
 
 // Mock data for sales
 export const initialSalesData = [
@@ -155,7 +156,7 @@ export const initialSalesData = [
 
 // Custom hook to manage sales data
 export const useSalesData = () => {
-  const [salesData, setSalesData] = useState(initialSalesData);
+  const [salesData, setSalesData] = useState<SaleFormData[]>(initialSalesData);
   const [loading, setLoading] = useState(true);
 
   // Fetch sales data from Supabase on component mount
@@ -172,7 +173,7 @@ export const useSalesData = () => {
       const { data: salesRecords, error: salesError } = await supabase
         .from('sales_records')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }) as { data: SalesRecordRow[] | null, error: any };
       
       if (salesError) {
         console.error('Error fetching sales records:', salesError);
@@ -181,11 +182,11 @@ export const useSalesData = () => {
       
       // For each sale, fetch its items
       const salesWithItems = await Promise.all(
-        salesRecords.map(async (sale) => {
+        (salesRecords || []).map(async (sale) => {
           const { data: items, error: itemsError } = await supabase
             .from('sales_items')
             .select('*')
-            .eq('sale_id', sale.id);
+            .eq('sale_id', sale.id) as { data: SalesItemRow[] | null, error: any };
           
           if (itemsError) {
             console.error('Error fetching sale items:', itemsError);
@@ -204,7 +205,7 @@ export const useSalesData = () => {
       
       // If we have data from Supabase, use it. Otherwise, use initial data
       if (salesWithItems.length > 0) {
-        setSalesData(salesWithItems);
+        setSalesData(salesWithItems as SaleFormData[]);
       }
     } catch (error) {
       console.error('Error in fetchSalesData:', error);
@@ -227,7 +228,7 @@ export const useSalesData = () => {
           amount: sale.amount
         })
         .select()
-        .single();
+        .single() as { data: SalesRecordRow | null, error: any };
       
       if (saleError) {
         console.error('Error inserting sale record:', saleError);
@@ -246,7 +247,7 @@ export const useSalesData = () => {
         
         const { error: itemsError } = await supabase
           .from('sales_items')
-          .insert(saleItems);
+          .insert(saleItems) as { data: any, error: any };
         
         if (itemsError) {
           console.error('Error inserting sale items:', itemsError);
