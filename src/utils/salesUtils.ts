@@ -321,7 +321,7 @@ export const useSalesData = () => {
     const saleId = await saveSaleToSupabase(formattedSale);
     
     if (saleId) {
-      // If successful, update local state
+      // Fix: Prepend to current salesData array instead of replacing it
       setSalesData(prev => [formattedSale, ...prev]);
     }
     
