@@ -85,9 +85,9 @@ const Sales = () => {
     }
   };
 
-  // Generate initial form data with a unique ID and today's date
+  // Generate initial form data with a sequential ID and today's date
   const initialFormData = {
-    id: generateSaleId(),
+    id: generateSaleId(salesData),
     date: new Date().toISOString().split("T")[0],
     customer: "",
     employee: "",

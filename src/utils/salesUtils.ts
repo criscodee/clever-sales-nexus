@@ -1,4 +1,3 @@
-
 import { SaleFormData } from "@/components/SaleForm";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -350,9 +349,26 @@ export const useSalesData = () => {
   };
 };
 
-// Generate a unique sale ID
-export const generateSaleId = () => {
-  return `S${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`;
+// Generate a sequential sale ID based on existing sales
+export const generateSaleId = (existingSales: SaleFormData[] = []) => {
+  // Find the highest existing numeric part
+  let highestNum = 0;
+  
+  existingSales.forEach(sale => {
+    if (sale.id && sale.id.startsWith('S')) {
+      // Extract the numeric part after 'S'
+      const numPart = parseInt(sale.id.substring(1));
+      if (!isNaN(numPart) && numPart > highestNum) {
+        highestNum = numPart;
+      }
+    }
+  });
+  
+  // Next number in sequence
+  const nextNum = highestNum + 1;
+  
+  // Format with leading zeros (e.g., S001)
+  return `S${String(nextNum).padStart(3, '0')}`;
 };
 
 // Calculate subtotal based on price and quantity
