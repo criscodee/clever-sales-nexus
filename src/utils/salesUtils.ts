@@ -176,15 +176,14 @@ export const useSalesData = () => {
       
       if (salesError) {
         console.error('Error fetching sales records:', salesError);
-        setSalesData(initialSalesData); // Use initial data if there's an error
+        // Continue with initial data if there's an error
         setLoading(false);
         return;
       }
       
-      // If no sales records found in database, use initial data
+      // If no sales records found in database, keep using initial data
       if (!salesRecords || salesRecords.length === 0) {
         console.log('No sales records found in database, using initial data');
-        setSalesData(initialSalesData);
         setLoading(false);
         return;
       }
@@ -212,11 +211,17 @@ export const useSalesData = () => {
         })
       );
       
-      setSalesData(salesWithItems as SaleFormData[]);
+      // Combine database records with initial data, avoiding duplicates by ID
+      const existingIds = new Set(salesWithItems.map(sale => sale.id));
+      const combinedData = [
+        ...salesWithItems,
+        ...initialSalesData.filter(sale => !existingIds.has(sale.id))
+      ];
+      
+      setSalesData(combinedData);
     } catch (error) {
       console.error('Error in fetchSalesData:', error);
-      // Fallback to initial data if there's an error
-      setSalesData(initialSalesData);
+      // No need to set initialSalesData - state already has it initialized
     } finally {
       setLoading(false);
     }
