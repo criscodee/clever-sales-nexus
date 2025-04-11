@@ -1,3 +1,4 @@
+
 import { SaleFormData } from "@/components/SaleForm";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -218,7 +219,12 @@ export const useSalesData = () => {
         ...initialSalesData.filter(sale => !existingIds.has(sale.id))
       ];
       
-      setSalesData(combinedData);
+      // Sort by date, newest first
+      const sortedData = combinedData.sort((a, b) => {
+        return new Date(b.date).getTime() - new Date(a.date).getTime();
+      });
+      
+      setSalesData(sortedData);
     } catch (error) {
       console.error('Error in fetchSalesData:', error);
       // No need to set initialSalesData - state already has it initialized
@@ -326,11 +332,12 @@ export const useSalesData = () => {
     const saleId = await saveSaleToSupabase(formattedSale);
     
     if (saleId) {
-      // Fix: Prepend to current salesData array instead of replacing it
+      // Add the new sale to the existing salesData (at the beginning since it's the newest)
       setSalesData(prev => [formattedSale, ...prev]);
+      return saleId;
     }
     
-    return saleId;
+    return null;
   };
 
   const deleteSale = async (saleId: string) => {

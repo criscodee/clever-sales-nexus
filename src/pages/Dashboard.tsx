@@ -29,7 +29,7 @@ const Dashboard = () => {
 
   // Generate initial form data with a unique ID and today's date
   const initialFormData = {
-    id: generateSaleId(),
+    id: generateSaleId(salesData),
     date: new Date().toISOString().split("T")[0],
     customer: "",
     employee: "",
@@ -54,7 +54,7 @@ const Dashboard = () => {
     }
   };
 
-  // Get recent sales for the dashboard display
+  // Get the 5 most recent sales for the dashboard display
   const recentSales = salesData.slice(0, 5);
 
   // Calculate top products from sales data
