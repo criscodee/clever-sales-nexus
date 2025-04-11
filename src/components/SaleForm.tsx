@@ -155,7 +155,8 @@ const SaleForm = ({
                   <Input 
                     {...field} 
                     placeholder="S001" 
-                    readOnly={isEditing}
+                    readOnly={true}
+                    className="bg-gray-100 cursor-not-allowed"
                   />
                 </FormControl>
                 <FormMessage />
